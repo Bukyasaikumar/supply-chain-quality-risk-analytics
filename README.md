@@ -1,5 +1,7 @@
 # Supply Chain Quality & Revenue-at-Risk Analytics
 
+**Live dashboard:** [View here](https://bukyasaikumar.github.io/supply-chain-quality-risk-analytics/)
+
 ## Overview
 
 Supply chain quality and risk analytics — SQL + Power BI. Analyzes defect patterns, supplier performance, transportation impact, and revenue at risk across a product/supplier base, producing a prioritized corrective action plan that turns a quality metric into a financial exposure figure.
