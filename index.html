@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FC Supply Chain Quality Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF1F5;
+    --surface:#FFFFFF;
+    --ink:#1B2436;
+    --muted:#64748B;
+    --line:#DDE3EC;
+    --brand:#2D3E63;
+    --brand-soft:#E7EAF3;
+    --critical:#B3261E;
+    --critical-soft:#FBEAE9;
+    --high:#B4703A;
+    --high-soft:#FBF0E6;
+    --medium:#2F6690;
+    --medium-soft:#E9F1F7;
+    --low:#3F7D58;
+    --low-soft:#EAF4EE;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:36px 28px 64px;}
+  header.masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px;
+    flex-wrap:wrap;gap:16px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;
+    color:var(--brand);text-transform:uppercase;margin:0 0 6px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;
+    margin:0;letter-spacing:-0.01em;
+  }
+  .subtitle{color:var(--muted);font-size:14px;margin-top:6px;max-width:520px;}
+  .source{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
+    text-align:right;line-height:1.6;
+  }
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
+  .kpi{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;position:relative;overflow:hidden;
+  }
+  .kpi::before{
+    content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--brand);
+  }
+  .kpi-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .kpi-value{
+    font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;margin-top:6px;
+    color:var(--brand);
+  }
+  .kpi-note{font-size:12px;color:var(--muted);margin-top:4px;}
+  section{margin-bottom:36px;}
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .section-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;}
+  .section-desc{font-size:12.5px;color:var(--muted);}
+  .grid-2{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;}
+  @media(max-width:860px){.grid-2{grid-template-columns:1fr;} .kpi-row{grid-template-columns:1fr;}}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{
+    text-align:left;font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:11px;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    padding:8px 10px;border-bottom:1px solid var(--line);
+  }
+  td{padding:9px 10px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .num{font-family:'IBM Plex Mono',monospace;text-align:right;}
+  .pill{
+    display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;
+    font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;
+  }
+  select{
+    font-family:'Inter',sans-serif;font-size:13px;padding:7px 10px;border-radius:7px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;
+  }
+  .ledger-row{
+    border-left:4px solid var(--line);padding:12px 14px;margin-bottom:8px;border-radius:6px;
+    background:var(--surface);border-top:1px solid var(--line);border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);display:grid;
+    grid-template-columns:1.4fr 1fr .8fr .9fr 1.6fr;gap:12px;align-items:center;
+  }
+  @media(max-width:900px){.ledger-row{grid-template-columns:1fr 1fr;font-size:13px;}}
+  .ledger-row.CRITICAL{border-left-color:var(--critical);}
+  .ledger-row.HIGH{border-left-color:var(--high);}
+  .ledger-row.MEDIUM{border-left-color:var(--medium);}
+  .ledger-row.LOW{border-left-color:var(--low);}
+  .combo{font-weight:600;font-size:13.5px;}
+  .combo span{display:block;font-weight:400;color:var(--muted);font-size:12px;}
+  .ledger-value{font-family:'IBM Plex Mono',monospace;font-size:14px;}
+  .ledger-label{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:1px;}
+  .action-text{font-size:12.5px;color:var(--ink);}
+  footer{
+    margin-top:40px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:11.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace;
+  }
+  canvas{max-height:260px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">FC Inventory Quality Analytics</p>
+      <h1>Supply Chain Quality &amp; Revenue-at-Risk Dashboard</h1>
+      <p class="subtitle">Defect patterns, supplier risk, and transport impact converted into revenue exposure, with a prioritized corrective action list.</p>
+    </div>
+    <div class="source">
+      Dataset: Kaggle — Supply Chain Analysis<br>
+      100 SKUs · 3 product types · 5 suppliers<br>
+      Built in MySQL, visualized here in HTML/Chart.js
+    </div>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Total Revenue at Risk</div>
+      <div class="kpi-value" id="kpiRevenue">£12,656</div>
+      <div class="kpi-note" id="kpiRevenueNote">across 15 product–supplier combinations</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Average Defect Rate</div>
+      <div class="kpi-value" id="kpiDefect">2.28%</div>
+      <div class="kpi-note" id="kpiDefectNote">across all 100 SKUs</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Critical Combinations</div>
+      <div class="kpi-value" id="kpiCritical">2</div>
+      <div class="kpi-note" id="kpiCriticalNote">defect rate ≥ 3%, immediate CAP required</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-title">Defect Rate by Product Type</div>
+        <div class="section-desc">Haircare carries the highest average defect rate, despite lower revenue than skincare.</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><canvas id="chartDefectByProduct"></canvas></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Supplier</th><th class="num">Avg Defect %</th><th class="num">Failure Rate %</th></tr></thead>
+          <tbody id="supplierTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-title">Revenue at Risk by Transport Mode</div>
+        <div class="section-desc">Road and Rail carry nearly identical exposure despite Road's higher defect rate — Rail's larger revenue base closes the gap.</div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><canvas id="chartTransportRisk"></canvas></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Mode</th><th class="num">Defect %</th><th class="num">Avg Ship Cost</th><th class="num">Revenue at Risk</th></tr></thead>
+          <tbody id="transportTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-title">Corrective Action Priority</div>
+        <div class="section-desc">Ranked by revenue at risk. Filter by product type to see where a single category's exposure concentrates.</div>
+      </div>
+      <select id="productFilter">
+        <option value="all">All product types</option>
+        <option value="skincare">Skincare</option>
+        <option value="haircare">Haircare</option>
+        <option value="cosmetics">Cosmetics</option>
+      </select>
+    </div>
+    <div id="ledger"></div>
+  </section>
+
+  <footer>
+    Source data: harshsingh2209 / Supply Chain Analysis (Kaggle) · Analysis: MySQL · Companion dashboard: Power BI (.pbix)
+  </footer>
+</div>
+
+<script>
+// ---- Verified query results (from Sai's own MySQL run) ----
+
+const defectByProduct = [
+  {product:'haircare', defect:2.48, total:34, failed:13, passed:6, pending:15},
+  {product:'skincare', defect:2.33, total:40, failed:13, passed:11, pending:16},
+  {product:'cosmetics', defect:1.92, total:26, failed:10, passed:6, pending:10},
+];
+
+const supplierRanking = [
+  {supplier:'Supplier 4', defect:2.34, failureRate:66.7},
+  {supplier:'Supplier 5', defect:2.67, failureRate:38.9},
+  {supplier:'Supplier 2', defect:2.36, failureRate:36.4},
+  {supplier:'Supplier 1', defect:1.80, failureRate:22.2},
+  {supplier:'Supplier 3', defect:2.47, failureRate:20.0},
+];
+
+const transportRisk = [
+  {mode:'Road', defect:2.62, shipCost:5.54, atRisk:3953},
+  {mode:'Rail', defect:2.32, shipCost:5.47, atRisk:3928},
+  {mode:'Air',  defect:1.82, shipCost:6.02, atRisk:2871},
+  {mode:'Sea',  defect:2.32, shipCost:4.97, atRisk:1906},
+];
+
+const priorityData = [
+  {product:'skincare', supplier:'Supplier 3', defect:2.54, revenue:61472, atRisk:1532, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'skincare', supplier:'Supplier 5', defect:3.47, revenue:41238, atRisk:1513, priority:'CRITICAL', action:'Immediate CAP + supplier audit + incoming inspection gate'},
+  {product:'skincare', supplier:'Supplier 1', defect:1.67, revenue:96726, atRisk:1414, priority:'MEDIUM', action:'Flag for next ops review'},
+  {product:'haircare', supplier:'Supplier 2', defect:2.45, revenue:57391, atRisk:1309, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'haircare', supplier:'Supplier 4', defect:2.58, revenue:41918, atRisk:1061, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'cosmetics', supplier:'Supplier 2', defect:2.03, revenue:44576, atRisk:927, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'haircare', supplier:'Supplier 1', defect:2.54, revenue:27576, atRisk:813, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'cosmetics', supplier:'Supplier 5', defect:1.80, revenue:50160, atRisk:784, priority:'MEDIUM', action:'Flag for next ops review'},
+  {product:'skincare', supplier:'Supplier 2', defect:2.65, revenue:23500, atRisk:630, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'cosmetics', supplier:'Supplier 4', defect:2.09, revenue:25860, atRisk:615, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'cosmetics', supplier:'Supplier 1', defect:1.56, revenue:33226, atRisk:613, priority:'MEDIUM', action:'Flag for next ops review'},
+  {product:'haircare', supplier:'Supplier 3', defect:2.06, revenue:28626, atRisk:427, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'skincare', supplier:'Supplier 4', defect:1.98, revenue:18691, atRisk:372, priority:'MEDIUM', action:'Flag for next ops review'},
+  {product:'haircare', supplier:'Supplier 5', defect:2.77, revenue:18945, atRisk:348, priority:'HIGH', action:'Increase cycle count frequency on this SKU range'},
+  {product:'cosmetics', supplier:'Supplier 3', defect:3.87, revenue:7698, atRisk:298, priority:'CRITICAL', action:'Immediate CAP + supplier audit + incoming inspection gate'},
+];
+
+const priorityColor = {CRITICAL:'#B3261E', HIGH:'#B4703A', MEDIUM:'#2F6690', LOW:'#3F7D58'};
+const priorityBg = {CRITICAL:'#FBEAE9', HIGH:'#FBF0E6', MEDIUM:'#E9F1F7', LOW:'#EAF4EE'};
+
+// ---- Defect by product chart ----
+new Chart(document.getElementById('chartDefectByProduct'), {
+  type: 'bar',
+  data: {
+    labels: defectByProduct.map(d=>d.product),
+    datasets: [{
+      label: 'Avg defect rate %',
+      data: defectByProduct.map(d=>d.defect),
+      backgroundColor: '#2D3E63',
+      borderRadius: 5,
+      maxBarThickness: 60
+    }]
+  },
+  options: {
+    plugins:{legend:{display:false}},
+    scales:{ y:{ beginAtZero:true, grid:{color:'#EEF1F5'} }, x:{grid:{display:false}} }
+  }
+});
+
+// ---- Supplier table ----
+const supplierBody = document.getElementById('supplierTable');
+supplierRanking.forEach(s=>{
+  supplierBody.innerHTML += `<tr><td>${s.supplier}</td><td class="num">${s.defect.toFixed(2)}</td><td class="num">${s.failureRate.toFixed(1)}</td></tr>`;
+});
+
+// ---- Transport chart ----
+new Chart(document.getElementById('chartTransportRisk'), {
+  type: 'bar',
+  data: {
+    labels: transportRisk.map(t=>t.mode),
+    datasets: [{
+      label: 'Revenue at risk (£)',
+      data: transportRisk.map(t=>t.atRisk),
+      backgroundColor: ['#B4703A','#2F6690','#3F7D58','#64748B'],
+      borderRadius: 5,
+      maxBarThickness: 60
+    }]
+  },
+  options: {
+    plugins:{legend:{display:false}},
+    scales:{ y:{ beginAtZero:true, grid:{color:'#EEF1F5'} }, x:{grid:{display:false}} }
+  }
+});
+
+// ---- Transport table ----
+const transportBody = document.getElementById('transportTable');
+transportRisk.forEach(t=>{
+  transportBody.innerHTML += `<tr><td>${t.mode}</td><td class="num">${t.defect.toFixed(2)}</td><td class="num">${t.shipCost.toFixed(2)}</td><td class="num">£${t.atRisk.toLocaleString()}</td></tr>`;
+});
+
+// ---- Ledger (corrective action) + filter ----
+function renderLedger(filter){
+  const ledger = document.getElementById('ledger');
+  const rows = filter==='all' ? priorityData : priorityData.filter(r=>r.product===filter);
+  ledger.innerHTML = '';
+  rows.forEach(r=>{
+    ledger.innerHTML += `
+      <div class="ledger-row ${r.priority}">
+        <div class="combo">${r.product} <span>${r.supplier}</span></div>
+        <div><span class="ledger-label">Defect rate</span><span class="ledger-value">${r.defect.toFixed(2)}%</span></div>
+        <div><span class="ledger-label">Revenue</span><span class="ledger-value">£${r.revenue.toLocaleString()}</span></div>
+        <div>
+          <span class="ledger-label">At risk</span>
+          <span class="ledger-value">£${r.atRisk.toLocaleString()}</span>
+          <span class="pill" style="color:${priorityColor[r.priority]};background:${priorityBg[r.priority]}">${r.priority}</span>
+        </div>
+        <div class="action-text">${r.action}</div>
+      </div>`;
+  });
+
+  // recompute KPIs for the current filter
+  const totalRisk = rows.reduce((s,r)=>s+r.atRisk,0);
+  const avgDefect = rows.reduce((s,r)=>s+r.defect,0) / rows.length;
+  const criticalCount = rows.filter(r=>r.priority==='CRITICAL').length;
+
+  document.getElementById('kpiRevenue').textContent = '£' + totalRisk.toLocaleString();
+  document.getElementById('kpiDefect').textContent = avgDefect.toFixed(2) + '%';
+  document.getElementById('kpiCritical').textContent = criticalCount;
+
+  if(filter==='all'){
+    document.getElementById('kpiRevenueNote').textContent = 'across 15 product–supplier combinations';
+    document.getElementById('kpiDefectNote').textContent = 'across all 100 SKUs';
+    document.getElementById('kpiCriticalNote').textContent = 'defect rate ≥ 3%, immediate CAP required';
+  } else {
+    document.getElementById('kpiRevenueNote').textContent = `within ${filter} only (${rows.length} suppliers)`;
+    document.getElementById('kpiDefectNote').textContent = `within ${filter} only`;
+    document.getElementById('kpiCriticalNote').textContent = `within ${filter} only`;
+  }
+}
+
+renderLedger('all');
+document.getElementById('productFilter').addEventListener('change', e=>renderLedger(e.target.value));
+</script>
+</body>
+</html>
